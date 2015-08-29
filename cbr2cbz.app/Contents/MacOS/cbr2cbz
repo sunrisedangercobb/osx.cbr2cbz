@@ -1,0 +1,98 @@
+#!/bin/bash
+
+## TODO: This should be more well rounded. Convert to .cbz, .cbr or .epub
+
+# Change independent field seperator
+SAVEIFS=$IFS
+IFS=$'\n'
+
+# Do some identification and misc work
+APP_PATH="$( cd "$(dirname "$0")" ; pwd -P )"
+APP_NAME="$(basename "$0")"
+BASE_APP_PATH=`echo $APP_PATH | sed -e 's/Contents\/MacOS//g'`
+RANDOM_NUMBER=`awk 'BEGIN{srand();print int(rand()*(20))}'`
+CHECK_GEM=`gem list terminal-notifier -i`
+
+# Set up some functions
+function success () {
+  if [[ $CHECK_GEM == "true" ]]; then
+    echo "File Converted: $output_directory/$@" | terminal-notifier -sound default -appIcon "$BASE_APP_PATH/Contents/Resources/$APP_NAME.icns"
+  else
+    osascript -e "display notification \"Converted: $output_directory/$@\" with title \"$APP_NAME\""
+  fi
+}
+function say_goodbye {
+  if [[ $CHECK_GEM == "true" ]]; then
+    echo "Goodbye" | terminal-notifier -sound default -appIcon "$BASE_APP_PATH/Contents/Resources/$APP_NAME.icns"
+  else
+    osascript -e "display notification \"Goodbye\" with title \"$APP_NAME\""
+  fi
+}
+function cut_string () {
+  echo $@ | cut -d ":" -f 2
+}
+function check_removal () {
+  if [[ $? == 1 ]]; then
+    IFS=$SAVEIFS
+    say_goodbye
+    exit 1
+  fi
+}
+function check_bool () {
+  if [[ $? == 1 ]]; then
+    IFS=$SAVEIFS
+    say_goodbye
+    exit 1
+  fi
+}
+
+# User workflow
+INPUT_SELECTOR=`osascript -e 'tell app "System Events" to display dialog "Select a File or Folder?" buttons {"Cancel","Folder","File"} default button 3 with title "'$APP_NAME'" with icon {"'$BASE_APP_PATH'/Contents/Resources/icns/'$RANDOM_NUMBER'.icns"}'` 
+check_bool $INPUT_SELECTOR
+INPUT_SELECTION=`cut_string $INPUT_SELECTOR`
+
+if [[ $INPUT_SELECTION == "File" ]]; then
+  files=`osascript -e 'tell application "System Events" to return POSIX path of (choose file)'`
+  check_bool $files
+  file_list=`find "$files"`
+  input_directory=`dirname "$files"`
+else
+  files=`osascript -e 'tell application "System Events" to return POSIX path of (choose folder)'`
+  check_bool $files
+  file_list=`find "$files" -iname "*.cbr"`
+  input_directory="$files"  
+fi
+
+OUTPUT_SELECTOR=`osascript -e 'tell app "System Events" to display dialog "Select Output Directory." buttons {"Cancel","Select","Default"} default button 3 with title "'$APP_NAME'" with icon {"'$BASE_APP_PATH'/Contents/Resources/icns/'$RANDOM_NUMBER'.icns"}'`
+check_bool $OUTPUT_SELECTOR
+OUTPUT_SELECTION=`cut_string $OUTPUT_SELECTOR`
+
+if [[ $OUTPUT_SELECTION != "Default" ]]; then 
+  output_directory=`osascript -e 'tell application "System Events" to return POSIX path of (choose folder)'`
+  check_bool $output_directory
+fi
+
+# Do the work
+for file in $file_list; do
+  if [[ $OUTPUT_SELECTION == "Default" ]]; then
+    output_directory=`dirname $file`
+  fi
+  filename=`basename $file | sed "s/....$//"`
+  $BASE_APP_PATH/Contents/Resources/bin/unrar "$file" -o $BASE_APP_PATH/Contents/Resources/temp/$filename
+  images=`find $BASE_APP_PATH/Contents/Resources/temp/$filename/ -type f`
+  zip -j "$output_directory/$filename.cbz" $images
+  check_bool
+  rm -rf $BASE_APP_PATH/Contents/Resources/temp/$filename
+  success "$filename.cbz"
+done
+
+# Clean any leftovers
+rm -rf $BASE_APP_PATH/Contents/Resources/temp/*
+REMOVE_CBR=`osascript -e 'tell app "System Events" to display dialog "Remove old .cbr?" default button 2 with title "'$APP_NAME'" with icon {"'$BASE_APP_PATH'/Contents/Resources/icns/'$RANDOM_NUMBER'.icns"}'`
+check_removal $REMOVE_CBR
+for file in $file_list; do
+  rm "$file"
+done
+
+# Set IFS back to defaults
+IFS=$SAVEIFS
