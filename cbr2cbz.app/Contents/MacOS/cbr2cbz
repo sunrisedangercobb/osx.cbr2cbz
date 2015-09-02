@@ -73,6 +73,7 @@ function kill_app () {
   for pid in $pids; do
     kill $pid
     killed
+    IFS=$SAVEIFS
     exit 0
   done
 }
