@@ -122,6 +122,8 @@ for file in $file_list; do
   success "$filename.cbz"
 done
 
+success_completion
+
 # Clean any leftovers
 rm -rf $BASE_APP_PATH/Contents/Resources/temp/*
 REMOVE_CBR=`osascript -e 'tell app "System Events" to display dialog "Remove old .cbr?" default button 2 with title "'$APP_NAME'" with icon {"'$BASE_APP_PATH'/Contents/Resources/icns/'$RANDOM_NUMBER'.icns"}'`
