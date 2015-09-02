@@ -7,3 +7,7 @@ If it is not obvious .cbr is just a .rar and .cbz is just a .zip.  So I chose to
 
 #notes
 This can run in single or batch mode, if you are doing large batches I recommend commenting out notifications!  Also as this is a bash script and is more of a fire and forget, you need to kill the process from CL if you want to stop it.  This will not erase your original files, but will prompt for removal at the end.
+This app would like to use a ruby gem called terminal-notifier.  If it is not installed it will use the basic notifications.  
+
+If you would like to install the gem you can issue this command:
+[sudo] gem install terminal-notifier
