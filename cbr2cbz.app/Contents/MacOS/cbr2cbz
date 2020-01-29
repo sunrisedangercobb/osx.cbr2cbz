@@ -93,8 +93,6 @@ elif [[ $input_selection == "Folder" ]]; then
   files=`osascript -e 'tell application "System Events" to return POSIX path of (choose folder)'`
   check_bool $files
   file_list=`find "$files" -iname "*.cbr"`
-  echo $files
-  echo $file_list
   input_directory="$files"
 elif [[ $input_selection == "Kill" ]]; then
   kill_app
