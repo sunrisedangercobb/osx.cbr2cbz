@@ -118,7 +118,8 @@ for file in $file_list; do
   filename=`basename $file | sed "s/....$//"`
   $BASE_APP_PATH/Contents/Resources/bin/unrar "$file" -o $BASE_APP_PATH/Contents/Resources/temp/$filename
   images=`find $BASE_APP_PATH/Contents/Resources/temp/$filename/ -type f`
-  zip -j "$output_directory/$filename.cbz" $images
+#   zip -j "$output_directory/$filename.cbz" $images
+  zip "$output_directory/$filename.cbz" $images
   check_bool
   rm -rf $BASE_APP_PATH/Contents/Resources/temp/$filename
   success "$filename.cbz"
