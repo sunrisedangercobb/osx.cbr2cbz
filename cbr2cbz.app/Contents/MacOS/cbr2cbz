@@ -79,7 +79,7 @@ function kill_app () {
 }
 
 # User workflow
-input_selector=`osascript -e 'tell app "System Events" to display dialog "Select a File or Folder?" buttons {"Cancel","Folder","File"} default button 3 with title "'$APP_NAME'" with icon {"'$BASE_APP_PATH'/Contents/Resources/icns/'$RANDOM_NUMBER'.icns"}'` 
+input_selector=`osascript -e 'tell app "System Events" to display dialog "Select a File or Folder?" buttons {"Cancel","Folder","File"} default button 3 with title "'$APP_NAME'" with icon {"'$BASE_APP_PATH'/Contents/Resources/icns/'$RANDOM_NUMBER'.icns"}'`
 check_bool $input_selector
 input_selection=`cut_string $input_selector`
 
@@ -92,8 +92,10 @@ if [[ $input_selection == "File" ]]; then
 elif [[ $input_selection == "Folder" ]]; then
   files=`osascript -e 'tell application "System Events" to return POSIX path of (choose folder)'`
   check_bool $files
-  file_list=`find "$files" -iname "*.mkv"`
-  input_directory="$files"  
+  file_list=`find "$files" -iname "*.cbr"`
+  echo $files
+  echo $file_list
+  input_directory="$files"
 elif [[ $input_selection == "Kill" ]]; then
   kill_app
 fi
@@ -103,14 +105,16 @@ output_selector=`osascript -e 'tell app "System Events" to display dialog "Selec
 check_bool $output_selector
 output_selection=`cut_string $output_selector`
 
-if [[ $output_selector != "Default" ]]; then 
+echo $output_selection
+
+if [[ $output_selection != "Default" ]]; then
   output_directory=`osascript -e 'tell application "System Events" to return POSIX path of (choose folder)'`
   check_bool $output_directory
 fi
 
 # Do the work
 for file in $file_list; do
-  if [[ $output_selector == "Default" ]]; then
+  if [[ $output_selection == "Default" ]]; then
     output_directory=`dirname $file`
   fi
   filename=`basename $file | sed "s/....$//"`
